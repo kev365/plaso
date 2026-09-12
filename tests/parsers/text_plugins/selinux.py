@@ -136,6 +136,23 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 6)
         self.CheckEventData(event_data, expected_event_values)
 
+        # AVC (serial 101): a record from a kernel that predates the permissive
+        # field, where the file is identified by the path field.
+        expected_event_values = {
+            "access_granted": False,
+            "access_permissions": ["getattr"],
+            "audit_type": "AVC",
+            "file_path": "/usr/lib/locale/locale-archive",
+            "permissive_mode": None,
+            "pid": "2714",
+            "process_name": "ls",
+            "security_context": "system_u:object_r:unlabeled_t:s0",
+            "target_object_class": "file",
+            "target_security_context": "system_u:object_r:locale_t:s0",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "AVC", 101)
+        self.CheckEventData(event_data, expected_event_values)
+
     def testProcessEnriched(self):
         """Tests the Process function on an ENRICHED (0x1d-suffixed) audit log."""
         plugin = selinux.SELinuxTextPlugin()
